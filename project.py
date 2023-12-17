@@ -89,11 +89,17 @@ class User():
 
     
 class Store():
-    def __init__(self, store_code, store_name, delivered_orders, sell_price):
+    def __init__(self, store_code, store_name, not_delivered_orders, sell_price):
         self.store_code = store_code
         self.store_name = store_name
-        self.delivered_orders = delivered_orders
+        self.not_delivered_orders = not_delivered_orders
         self.sell_price = sell_price
+
+    def get_store_code(self):
+        return self.store_code
+    
+    def edit_store_name(self,new_store_name):
+        self.store_name = new_store_name
 
 
 class Order():
@@ -170,7 +176,6 @@ def register_user():
     with open("user.csv","a",newline="\n") as user_file:
             user_writer = csv.writer(user_file)
             user_writer.writerow(new_user_list)
-
 
 def edit_user():
     user_name_show = []
@@ -267,26 +272,96 @@ def edit_user():
         user_writer.writerow(default_header)
         for object in all_user :
             user = [object.user_name,object.name_family,object.national_code,object.phone_number,object.purchase_ammount,object.discount,object.debit]
-            user_writer.writerow(user)
-
-        
-        
-
-def create_all_user():
-    default_header = ["UserName", "NameFamily", "NationalCode", "PhoneNumber", "PurchaseAmmount", "Discount", "Debit"]
-    with open("user.csv","r") as user_file:
-        user_reader = csv.reader(user_file)
-        header = next(user_reader)
-        for row in user_reader :
-            user = User(row[0],row[1],row[2],row[3],row[4],row[5],row[6])
-            all_user.append(user)
+            user_writer.writerow(user)      
             
+def register_store():
+    while True :
+        store_name_input = input("store name : ")
+        if store_name_input.isalnum() == False :
+            print("enter storename only with alphabet letter (a-z) and numbers (0-9)")
+        else :
+            for object in all_store :
+                if object.store_name == store_name_input :
+                    print("storename already exists")
+                    break
+            else :
+                break
+    try :            
+        store_code_new = object.get_store_code()
+    except:
+        store_code_new = 100000
+    else :
+        store_code_new  = int(object.get_store_code()) + 1
+
+    new_store = Store(store_code_new,store_name_input,0,0)
+    all_store.append(new_store)
+    new_store_list = [new_store.store_code,new_store.store_name,new_store.not_delivered_orders,new_store.sell_price]
+    with open("store.csv","a",newline="\n") as store_file:
+        store_wiriter = csv.writer(store_file)
+        store_wiriter.writerow(new_store_list)
+
+def edit_store():
+    store_name_show = []
+    with open("store.csv","r") as store_file:
+        store_reader = csv.DictReader(store_file)
+        for row in store_reader :
+            store_name_show.append(row["StoreName"])
+    for item in store_name_show :
+            print(item,end="|")
+    print()
+    while True :
+        store_edit_input = input("choose store name from the top stores : ")
+        if store_edit_input in store_name_show :
+            break
+        else :
+            print("this store does not exist!")
+    for object in all_store:
+        if object.store_name == store_edit_input:
+            print(f"Store Code : {object.store_code}")
+            print(f"Store Name : {object.store_name}")
+            print(f"Not Delivered Orders : {object.not_delivered_orders}")
+            print(f"Sell Price : {object.sell_price}")
+            while True :
+                print("""1.edit store name
+2.exit""")
+                edit_input = input("")
+                if edit_input == "1":
+                    while True :
+                        store_name_edit_input = input("store name : ")
+                        if store_name_edit_input.isalnum() == False :
+                             print("enter storename only with alphabet letter (a-z) and numbers (0-9)")
+                        else :
+                            if store_name_edit_input in store_name_show :
+                                print("store name already exist")
+                            else :
+                                object.edit_store_name(store_name_edit_input)
+                            break
+                elif edit_input == "2":
+                    break
+                else :
+                    print("\nwrite the correct command!\n")
+    default_store_header = ["StoreCode", "StoreName", "NotDeliveredOrders", "SellPrice"]  
+    store = []              
+    with open("store.csv","w",newline="\n") as store_file:
+        store_writer = csv.writer(store_file)
+        store_writer.writerow(default_store_header)
+        for object in all_store :
+            store = [object.store_code,object.store_name,object.not_delivered_orders,object.sell_price]
+            store_writer.writerow(store)
+
+def create_all_store():
+    default_header = ["StoreCode", "StoreName", "NotDeliveredOrders", "SellPrice"]
+    with open("store.csv","r") as store_file:
+        store_reader = csv.reader(store_file)
+        header = next(store_reader)
+        for row in store_reader :
+            store = Store(row[0],row[1],row[2],row[3])
+            all_store.append(store)
+
+
+
 all_user = []
-create_all_user()
-edit_user()
-
-
-
+all_store = []
 
 
   
