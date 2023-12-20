@@ -1,4 +1,6 @@
 import csv
+import random
+import string
 from datetime import date
 
 class Food:
@@ -14,9 +16,6 @@ class Food:
         self.purchase_order = purchase_order
         self.stock = stock
         self.price = price
-
-    def get_food_code(self):
-        return self.food_code
     
     def edit_food_name(self,new_food_name):
         self.food_name = new_food_name
@@ -32,6 +31,12 @@ class Food:
 
     def edit_price(self,new_price):
         self.price = new_price
+
+    def get_food_code(self,food_code_order):
+        if self.food_code == food_code_order :
+            return True
+        else :
+            return False
 
 
 class User():
@@ -59,6 +64,12 @@ class User():
     def edit_phone_number(self,new_phone_numnber):
         self.phone_number = new_phone_numnber
 
+    def get_user_name(self,user_order):
+        if self.user_name == user_order :
+            return True
+        else :
+            return False
+
     
 class Store():
     def __init__(self, store_code, store_name, not_delivered_orders, sell_price):
@@ -66,12 +77,15 @@ class Store():
         self.store_name = store_name
         self.not_delivered_orders = not_delivered_orders
         self.sell_price = sell_price
-
-    def get_store_code(self):
-        return self.store_code
-    
+        
     def edit_store_name(self,new_store_name):
         self.store_name = new_store_name
+
+    def get_store_coede(self,store_order):
+        if self.store_code == store_order :
+            return True 
+        else :
+            return False
 
 
 class Order():
@@ -83,17 +97,16 @@ class Order():
         self.delivery_date = delivery_date
 
 
+class UserOrder(Order):
+    def __init__(self, order_code, food_code, order_number, order_date, delivery_date, user_name):
+        super().__init__(order_code, food_code, order_number, order_date, delivery_date)
+        self.user_name = user_name
+
+
 class StoreOrder(Order):
     def __init__(self, order_code, food_code, order_number, order_date, delivery_date, store_code):
         super().__init__(order_code, food_code, order_number, order_date, delivery_date)
         self.store_code = store_code
-
-
-class UserOrder(Order):
-    def __init__(self, order_code, food_code, order_number, order_date, delivery_date, user_name):
-        super().__init__(order_code, food_code, order_number, order_date, delivery_date)
-        self.username = user_name
-
 
 def register_user():
     while True :
@@ -184,14 +197,14 @@ def edit_user():
                 edit_input = input("")
                 if edit_input == "1":
                     while True :
-                        user_name_edit_input = input("new username : ")
-                        if user_name_edit_input.isalnum() == False :
+                        user_name_input = input("new username : ")
+                        if user_name_input.isalnum() == False :
                             print("enter username only with alphabet letter (a-z) and numbers (0-9)")
                         else :
-                            if user_name_edit_input in user_name_show :
+                            if user_name_input in user_name_show :
                                 print('username already exist')
                             else :
-                                object.edit_user_name(user_name_edit_input)
+                                object.edit_user_name(user_name_input)
                                 break
                 elif edit_input == "2" :
                     while True :
@@ -203,32 +216,32 @@ def edit_user():
                             if name.isalpha() == False or family.isalpha == False :
                                 print("enter name and family only with alphabet letter (a-z)")
                             else :
-                                name_family_edit_input = f"{name} {family}"
-                                object.edit_user_name_family(name_family_edit_input)
+                                name_family_input = f"{name} {family}"
+                                object.edit_user_name_family(name_family_input)
                             break
                 elif edit_input == "3" :
                     while True :
-                        national_code_edit_input = input("national code : ")
-                        if national_code_edit_input.isnumeric == False or len(national_code_edit_input) != 10 :
+                        national_code_input = input("national code : ")
+                        if national_code_input.isnumeric == False or len(national_code_input) != 10 :
                             print("enter national code with ten numbers (0-9)")
                         else : 
-                            if national_code_edit_input in national_code_show :
+                            if national_code_input in national_code_show :
                                 print("national code already exists")
                             else :
-                                object.edit_national_code(national_code_edit_input)
+                                object.edit_national_code(national_code_input)
                                 break
                 elif edit_input == "4" :
                     while True :
-                        phone_number_edit_input = input("phone number : ")   
-                        if phone_number_edit_input.startswith("0") == True :
+                        phone_number_input = input("phone number : ")   
+                        if phone_number_input.startswith("0") == True :
                             print("start without 0")
-                        elif len(phone_number_edit_input) != 10 or phone_number_edit_input.isalnum == False :
+                        elif len(phone_number_input) != 10 or phone_number_input.isalnum == False :
                             print("enter 10 numbers.example : 9352993173")
                         else :
-                            if phone_number_edit_input in phone_number_show :
+                            if phone_number_input in phone_number_show :
                                 print("phone number already exists")
                             else :
-                                object.edit_phone_number(phone_number_edit_input)
+                                object.edit_phone_number(phone_number_input)
                                 break
                 elif edit_input == "5" :                    
                     break
@@ -261,12 +274,10 @@ def update_user():
             user_writer.writerow(user) 
 
 def register_store():
-    try :            
-        store_code_new = object.get_store_code()
-    except:
-        store_code_new = 100000
-    else :
-        store_code_new  = int(object.get_store_code()) + 1
+    try : 
+        store_code = int(all_store[-1].store_code) + 1
+    except :
+        store_code = 1000
     while True :
         store_name_input = input("store name : ")
         if store_name_input.isalnum() == False :
@@ -278,7 +289,7 @@ def register_store():
                     break
             else :
                 break
-    new_store = Store(store_code_new,store_name_input,0,0)
+    new_store = Store(store_code,store_name_input,0,0)
     all_store.append(new_store)
     new_store_list = [new_store.store_code,new_store.store_name,new_store.not_delivered_orders,new_store.sell_price]
     add_store(new_store_list)
@@ -310,14 +321,14 @@ def edit_store():
                 edit_input = input("")
                 if edit_input == "1":
                     while True :
-                        store_name_edit_input = input("store name : ")
-                        if store_name_edit_input.isalnum() == False :
+                        store_name_input = input("store name : ")
+                        if store_name_input.isalnum() == False :
                              print("enter storename only with alphabet letter (a-z) and numbers (0-9)")
                         else :
-                            if store_name_edit_input in store_name_show :
+                            if store_name_input in store_name_show :
                                 print("store name already exist")
                             else :
-                                object.edit_store_name(store_name_edit_input)
+                                object.edit_store_name(store_name_input)
                             break
                 elif edit_input == "2":
                     break
@@ -350,12 +361,10 @@ def update_store():
             store_writer.writerow(store)
 
 def register_food():
-    try :            
-        food_code_new = object.get_food_code()
-    except:
-        food_code_new = 100000
-    else :
-        food_code_new  = int(object.get_store_code()) + 1
+    try : 
+        food_code = int(all_food[-1].food_code) + 1
+    except :
+        food_code = 2000
     while True :   
         food_name_input = input("food name : ")
         for object in all_food:
@@ -420,9 +429,7 @@ def register_food():
         price_flag = True
         price_input = input("price(example : 100.000.000) : ").split(".")
         for item in price_input :
-            if len(item) != 3 :
-                print("enter correct format")
-            elif item.isnumeric() == False :
+            if item.isnumeric() == False or len(item) != 3 :
                 price_flag = False
                 print("write numbers")
                 break
@@ -431,7 +438,7 @@ def register_food():
             for item in range(len(price_input)):
                 price = price + price_input[item]
             break
-    new_food = Food(food_code_new,food_name_input,company_input,manufacture_date_str,expire_date_str,purchase_order_input,stock,price)
+    new_food = Food(food_code,food_name_input,company_input,manufacture_date_str,expire_date_str,purchase_order_input,stock,price)
     all_food.append(new_food)
     new_food_list = [new_food.food_code,new_food.food_name,new_food.company,new_food.manufacture_date,new_food.expire_date,new_food.purchase_order,new_food.stock,new_food.price]
     add_food(new_food_list)
@@ -471,11 +478,11 @@ def edit_food():
                 edit_input = input("")
                 if edit_input == "1":
                     while True :   
-                        food_name_edit_input = input("new food name : ")
-                        if food_name_edit_input in food_name_show :
+                        food_name_input = input("new food name : ")
+                        if food_name_input in food_name_show :
                             print("food name already exist")
                         else :
-                            object.edit_food_name(food_name_edit_input)
+                            object.edit_food_name(food_name_input)
                             break
                 elif edit_input == "2":
                     company_input = input("new company : ")
@@ -576,16 +583,114 @@ def update_food():
             food_writer.writerow(food) 
 
 
+def get_input_order():
+    order_code = ''.join(random.choices(string.ascii_uppercase + string.digits, k=10))
+    while True :
+        food_code_input = input("food code : ")
+        for object in all_food:
+            food_code_check = object.get_food_code(food_code_input)
+        if food_code_check == False :
+            print("food does not exist")
+        elif food_code_check == True :
+            break
+
+        #order number az mojodi stock food kam shavaaaaaaaaaaaaaaaad
+
+
+    while True :
+        try : 
+            order_number = int(input("order number : "))
+        except :
+            print("enter numbers")
+        else :
+            break
+    order_date = date.today()
+    order_date_str = order_date.strftime("%Y-%m-%d")
+    while True : 
+        delivery_date_input = input("enter delivery date.example : 2024,1,10 : ").split(",")
+        try :
+            delivery_date = date(int(delivery_date_input[0]),int(delivery_date_input[1]),int(delivery_date_input[2]))
+        except IndexError :
+            print("enter correct fomrat.example : 2024,1,10")
+        except TypeError:
+            print("enter numbers")
+        except ValueError:
+            print("enter year between 1 to 9999-enter month between 1 to 12-enter day between 1 to 30")
+        else :
+            if delivery_date < order_date :
+                print("delivery date must be today or after today")
+            else :
+                delivery_date_str = delivery_date.strftime("%Y-%m-%d")
+                break
+
+    return order_code,food_code_input,order_number,order_date_str,delivery_date_str
+
+def record_order_user():
+    while True :
+        user_name_input = input("user name : ")
+        for object in all_user :
+            user_name_check = object.get_user_name(user_name_input)
+        if user_name_check == False :
+            print("username does not exist")
+        elif user_name_check == True :
+            break
+    order_code,food_code_input,order_number,order_date_str,delivery_date_str = get_input_order()
+
+    new_order_user = UserOrder(order_code,food_code_input,order_number,order_date_str,delivery_date_str,user_name_input)
+    all_order.append(new_order_user)
+    new_order = [new_order_user.order_code,new_order_user.food_code,new_order_user.order_number,new_order_user.order_date,new_order_user.delivery_date,new_order_user.user_name]
+    add_order(new_order)
+
+
+def record_order_store():
+    while True :
+        store_code_input = input("store code : ")
+        for object in all_store:
+            store_code_check = object.get_store_coede(store_code_input)
+        if store_code_check == False :
+            print("store does not exist")
+        elif store_code_check == True :
+            break
+    order_code,food_code_input,order_number,order_date_str,delivery_date_str = get_input_order()
+
+    new_order_store = StoreOrder(order_code,food_code_input,order_number,order_date_str,delivery_date_str,store_code_input)
+    all_order.append(new_order_store)
+    new_order = [new_order_store.order_code,new_order_store.food_code,new_order_store.order_number,new_order_store.order_date,new_order_store.delivery_date,new_order_store.store_code]
+    add_order(new_order)
+
+
+def create_all_order():
+    default_header = ["OrderCode", "FoodCode", "OrderNumber", "OrderDate","DeliveryDate","User/Store"]
+    with open("order.csv","r") as order_file:
+        order_reader = csv.reader(order_file)
+        header = next(order_reader)
+        for row in order_reader :
+            for object in all_user:
+                if object.user_name == row[5]:
+                    order = UserOrder(row[0],row[1],row[2],row[3],row[4],row[5])
+                    all_order.append(order)
+                    break
+            for object in all_store:
+                if object.store_code == row[5]:
+                    order = StoreOrder(row[0],row[1],row[2],row[3],row[4],row[5])
+                    all_order.append(order)
+                    break
+
+def add_order(new_order):
+    with open("order.csv","a",newline="\n") as order_file:
+        order_wiriter = csv.writer(order_file)
+        order_wiriter.writerow(new_order)
+
+
+
 all_user = []
 all_store = []
 all_food = []
+all_order = []
 create_all_user()
 create_all_store()
 create_all_food()
-
-
-
-
+create_all_order()
 
 
   
