@@ -37,6 +37,13 @@ class Food:
             return True
         else :
             return False
+        
+    def decrease_stock(self,decrease):
+        if int(self.stock) >= decrease:
+            self.stock = int(self.stock) - decrease
+            return True
+        else :
+            return False
 
 
 class User():
@@ -81,7 +88,7 @@ class Store():
     def edit_store_name(self,new_store_name):
         self.store_name = new_store_name
 
-    def get_store_coede(self,store_order):
+    def get_store_code(self,store_order):
         if self.store_code == store_order :
             return True 
         else :
@@ -592,10 +599,12 @@ def get_input_order():
         if food_code_check == False :
             print("food does not exist")
         elif food_code_check == True :
+            for object in all_food:
+                if food_code_input == object.food_code:
+                    if int(object.stock) <= 0:
+                        print("stock is 0")
+                        return False
             break
-
-        #order number az mojodi stock food kam shavaaaaaaaaaaaaaaaad
-
 
     while True :
         try : 
@@ -603,7 +612,14 @@ def get_input_order():
         except :
             print("enter numbers")
         else :
-            break
+            for object in all_food :
+                if object.food_code == food_code_input:
+                    stock_check = object.decrease_stock(order_number)
+                    break
+            if stock_check == False :
+                print("stock less than order")
+            elif stock_check == True :
+                break
     order_date = date.today()
     order_date_str = order_date.strftime("%Y-%m-%d")
     while True : 
@@ -622,7 +638,7 @@ def get_input_order():
             else :
                 delivery_date_str = delivery_date.strftime("%Y-%m-%d")
                 break
-
+    
     return order_code,food_code_input,order_number,order_date_str,delivery_date_str
 
 def record_order_user():
@@ -634,8 +650,15 @@ def record_order_user():
             print("username does not exist")
         elif user_name_check == True :
             break
-    order_code,food_code_input,order_number,order_date_str,delivery_date_str = get_input_order()
 
+    try:
+        order_code,food_code_input,order_number,order_date_str,delivery_date_str = get_input_order()
+    except:
+        return False
+
+
+
+    update_food()
     new_order_user = UserOrder(order_code,food_code_input,order_number,order_date_str,delivery_date_str,user_name_input)
     all_order.append(new_order_user)
     new_order = [new_order_user.order_code,new_order_user.food_code,new_order_user.order_number,new_order_user.order_date,new_order_user.delivery_date,new_order_user.user_name]
@@ -646,13 +669,17 @@ def record_order_store():
     while True :
         store_code_input = input("store code : ")
         for object in all_store:
-            store_code_check = object.get_store_coede(store_code_input)
+            store_code_check = object.get_store_code(store_code_input)
         if store_code_check == False :
             print("store does not exist")
         elif store_code_check == True :
             break
-    order_code,food_code_input,order_number,order_date_str,delivery_date_str = get_input_order()
-
+    try:
+        order_code,food_code_input,order_number,order_date_str,delivery_date_str = get_input_order()
+    except:
+        return False
+    
+    update_food()
     new_order_store = StoreOrder(order_code,food_code_input,order_number,order_date_str,delivery_date_str,store_code_input)
     all_order.append(new_order_store)
     new_order = [new_order_store.order_code,new_order_store.food_code,new_order_store.order_number,new_order_store.order_date,new_order_store.delivery_date,new_order_store.store_code]
@@ -691,7 +718,6 @@ create_all_user()
 create_all_store()
 create_all_food()
 create_all_order()
-
 
   
 
