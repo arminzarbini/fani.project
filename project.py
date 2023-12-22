@@ -278,14 +278,30 @@ def update_user():
             user = [object.user_name,object.name_family,object.national_code,object.phone_number,object.purchase_ammount,object.discount,object.debit]
             user_writer.writerow(user) 
 
+def main_store():
+    main = Store(1000,"main",0,0)
+    all_store.append(main)
+    update_store()
+
+def check_main_store():
+    for object in all_store :
+        if object.store_name == "main":
+            return False
+        break
+    else :
+        main_store()
+
+
 def register_store():
     try : 
         store_code = int(all_store[-1].store_code) + 1
     except :
-        store_code = 1000
+        store_code = 1001
     while True :
         store_name_input = input("store name : ")
-        if store_name_input.isalnum() == False :
+        if store_name_input == "main":
+            print("main store already exist")
+        elif store_name_input.isalnum() == False :
             print("enter storename only with alphabet letter (a-z) and numbers (0-9)")
         else :
             for object in all_store :
@@ -302,6 +318,7 @@ def edit_store():
     store_name_show = []
     with open("store.csv","r") as store_file:
         store_reader = csv.DictReader(store_file)
+        main_reader = next(store_reader)
         for row in store_reader :
             store_name_show.append(row["StoreName"])
     for item in store_name_show :
@@ -326,7 +343,9 @@ def edit_store():
                 if edit_input == "1":
                     while True :
                         store_name_input = input("store name : ")
-                        if store_name_input.isalnum() == False :
+                        if store_name_input == "main":
+                            print("main store already exist")
+                        elif store_name_input.isalnum() == False :
                              print("enter storename only with alphabet letter (a-z) and numbers (0-9)")
                         else :
                             if store_name_input in store_name_show :
@@ -721,8 +740,7 @@ create_all_user()
 create_all_store()
 create_all_food()
 create_all_order()
-record_order_user()
-
+check_main_store()
 
 
 
