@@ -38,15 +38,22 @@ class Food:
         else :
             return False
         
-    def decrease_stock(self,decrease):
-        if int(self.stock) >= decrease:
-            self.stock = int(self.stock) - decrease
+
+    def order_stock_check(self,food_order):
+        if int(self.stock) >= food_order :
             return True
         else :
             return False
         
+        
+    def decrease_stock(self,decrease):
+        self.stock = int(self.stock) - decrease
+
+        
     def extract_int_price(self):
 	    return "".join(filter(lambda x: x.isnumeric(), self.price))
+    
+
 
 
 class User():
@@ -102,23 +109,25 @@ class Store():
          
 
 class Order():
-    def __init__(self, order_code, food_code, order_number, order_date, delivery_date):
+    def __init__(self, order_code, seller_code, food_code, order_number, order_date, delivery_date):
         self.order_code = order_code
+        self.seller_code = seller_code
         self.food_code = food_code
         self.order_number = order_number
         self.order_date = order_date
         self.delivery_date = delivery_date
 
 class UserOrder(Order):
-    def __init__(self, order_code, food_code, order_number, order_date, delivery_date, user_name):
-        super().__init__(order_code, food_code, order_number, order_date, delivery_date)
+    def __init__(self, order_code, seller_code, food_code, order_number, order_date, delivery_date,user_name):
+        super().__init__(order_code, seller_code, food_code, order_number, order_date, delivery_date)
         self.user_name = user_name
 
 
 class StoreOrder(Order):
-    def __init__(self, order_code, food_code, order_number, order_date, delivery_date, store_code):
-        super().__init__(order_code, food_code, order_number, order_date, delivery_date)
+    def __init__(self, order_code, seller_code, food_code, order_number, order_date, delivery_date,store_code):
+        super().__init__(order_code, seller_code, food_code, order_number, order_date, delivery_date)
         self.store_code = store_code
+
 
 def register_user():
     while True :
@@ -277,7 +286,7 @@ def update_user():
         for object in all_user :
             user = [object.user_name,object.name_family,object.national_code,object.phone_number,object.purchase_ammount,object.discount,object.debit]
             user_writer.writerow(user) 
-
+"""
 def main_store():
     main = Store(1000,"main",0,0)
     all_store.append(main)
@@ -290,6 +299,7 @@ def check_main_store():
         break
     else :
         main_store()
+"""
 
 
 def register_store():
@@ -299,9 +309,9 @@ def register_store():
         store_code = 1001
     while True :
         store_name_input = input("store name : ")
-        if store_name_input == "main":
-            print("main store already exist")
-        elif store_name_input.isalnum() == False :
+        #if store_name_input == "main":
+            #print("main store already exist")
+        if store_name_input.isalnum() == False :
             print("enter storename only with alphabet letter (a-z) and numbers (0-9)")
         else :
             for object in all_store :
@@ -318,7 +328,7 @@ def edit_store():
     store_name_show = []
     with open("store.csv","r") as store_file:
         store_reader = csv.DictReader(store_file)
-        main_reader = next(store_reader)
+        # main_reader = next(store_reader)
         for row in store_reader :
             store_name_show.append(row["StoreName"])
     for item in store_name_show :
@@ -343,9 +353,9 @@ def edit_store():
                 if edit_input == "1":
                     while True :
                         store_name_input = input("store name : ")
-                        if store_name_input == "main":
-                            print("main store already exist")
-                        elif store_name_input.isalnum() == False :
+                        #if store_name_input == "main":
+                            #print("main store already exist")
+                        if store_name_input.isalnum() == False :
                              print("enter storename only with alphabet letter (a-z) and numbers (0-9)")
                         else :
                             if store_name_input in store_name_show :
@@ -597,19 +607,34 @@ def update_food():
 def get_input_order():
     order_code = ''.join(random.choices(string.ascii_uppercase + string.digits, k=10))
     while True :
+        seller_code = input("seller code : ")
+        store_flag = False
+        for object in all_store :
+            seller_code_check = object.get_store_code(seller_code)
+            if seller_code_check == True :
+                store_flag = True
+                break
+        if store_flag == False :
+            print("store does not exist")
+        elif store_flag == True :
+            break
+    while True :
         food_code_input = input("food code : ")
+        food_flag = False
         for object in all_food:
             food_code_check = object.get_food_code(food_code_input)
-        if food_code_check == False :
+            if food_code_check == True :
+                food_flag = True 
+                break
+        if food_flag == False :
             print("food does not exist")
-        elif food_code_check == True :
+        elif food_flag == True :
             for object in all_food:
                 if food_code_input == object.food_code:
                     if int(object.stock) <= 0:
                         print("stock is 0")
                         return False
             break
-
     while True :
         try : 
             order_number = int(input("order number : "))
@@ -618,12 +643,13 @@ def get_input_order():
         else :
             for object in all_food :
                 if object.food_code == food_code_input:
-                    stock_check = object.decrease_stock(order_number)
+                    stock_check = object.order_stock_check(order_number)
                     break
-            if stock_check == False :
-                print("stock less than order")
-            elif stock_check == True :
+            if stock_check == True :
                 break
+            else :
+                print("stock less than order")
+
     order_date = date.today()
     order_date_str = order_date.strftime("%Y-%m-%d")
     while True : 
@@ -643,23 +669,26 @@ def get_input_order():
                 delivery_date_str = delivery_date.strftime("%Y-%m-%d")
                 break
     
-    return order_code,food_code_input,order_number,order_date_str,delivery_date_str
+    return order_code,seller_code,food_code_input,order_number,order_date_str,delivery_date_str
 
 def record_order_user():
     while True :
         user_name_input = input("user name : ")
+        user_flag = False
         for object in all_user :
-            user_name_check = object.get_user_name(user_name_input)
-        if user_name_check == False :
-            print("username does not exist")
-        elif user_name_check == True :
+            user_code_check = object.get_user_name(user_name_input)
+            if user_code_check == True :
+                user_flag = True
+                break
+        if user_flag == False :
+            print("store does not exist")
+        elif user_flag == True :
             break
 
     try:
-        order_code,food_code_input,order_number,order_date_str,delivery_date_str = get_input_order()
+        order_code,seller_code,food_code_input,order_number,order_date_str,delivery_date_str = get_input_order()
     except:
         return False
-    update_food()
     for object in all_food:
         if object.food_code == food_code_input :
             int_price = object.extract_int_price()
@@ -669,66 +698,76 @@ def record_order_user():
         if object.user_name == user_name_input:
             object.increase_purchase_ammount(int_price)
             break
-    new_order_user = UserOrder(order_code,food_code_input,order_number,order_date_str,delivery_date_str,user_name_input)
+    for object in all_food:
+        if object.food_code == food_code_input:
+            object.decrease_stock(order_number)
+            break
+    new_order_user = UserOrder(order_code,seller_code,food_code_input,order_number,order_date_str,delivery_date_str,user_name_input)
     all_order.append(new_order_user)
-    update_order()
+    update_food()
     update_user()
+    update_order()
 
 
 def record_order_store():
     while True :
         store_code_input = input("store code : ")
-        for object in all_store:
-            store_code_check = object.get_store_code(store_code_input)
-        if store_code_check == False :
+        store_flag = False
+        for object in all_store :
+            seller_code_check = object.get_store_code(seller_code)
+            if seller_code_check == True :
+                store_flag = True
+                break
+        if store_flag == False :
             print("store does not exist")
-        elif store_code_check == True :
+        elif store_flag == True :
             break
     try:
-        order_code,food_code_input,order_number,order_date_str,delivery_date_str = get_input_order()
+        order_code,seller_code,food_code_input,order_number,order_date_str,delivery_date_str = get_input_order()
+        if store_code_input == seller_code :
+            print ("seller and buyer are one!try again!")
+            return False
     except:
         return False
-    
-    update_food()
-    new_order_store = StoreOrder(order_code,food_code_input,order_number,order_date_str,delivery_date_str,store_code_input)
+    for object in all_food:
+        if object.food_code == food_code_input:
+            object.decrease_stock(order_number)
+            break
+    new_order_store = StoreOrder(order_code,seller_code,food_code_input,order_number,order_date_str,delivery_date_str,store_code_input)
     all_order.append(new_order_store)
+    update_food()
     update_order()
 
 
 def create_all_order():
-    default_header = ["OrderCode", "FoodCode", "OrderNumber", "OrderDate","DeliveryDate","User/Store"]
     with open("order.csv","r") as order_file:
         order_reader = csv.reader(order_file)
         header = next(order_reader)
         for row in order_reader :
             for object in all_user:
-                if object.user_name == row[5]:
-                    order = UserOrder(row[0],row[1],row[2],row[3],row[4],row[5])
+                if object.user_name == row[6]:
+                    order = UserOrder(row[0],row[1],row[2],row[3],row[4],row[5],row[6])
                     all_order.append(order)
                     break
             for object in all_store:
-                if object.store_code == row[5]:
-                    order = StoreOrder(row[0],row[1],row[2],row[3],row[4],row[5])
+                if object.store_code == row[6]:
+                    order = StoreOrder(row[0],row[1],row[2],row[3],row[4],row[5],row[6])
                     all_order.append(order)
                     break
 
-def add_order(new_order):
-    with open("order.csv","a",newline="\n") as order_file:
-        order_wiriter = csv.writer(order_file)
-        order_wiriter.writerow(new_order)
 
 def update_order():
-    default_header = ["OrderCode", "FoodCode", "OrderNumber", "OrderDate","DeliveryDate","User/Store"]  
+    default_header = ["OrderCode","SellerCode", "FoodCode", "OrderNumber", "OrderDate","DeliveryDate","User/Store"]  
     order = []              
     with open("order.csv","w",newline="\n") as order_file:
         order_writer = csv.writer(order_file)
         order_writer.writerow(default_header)
         for object in all_order :
             if type(object) is UserOrder:
-                order = [object.order_code,object.food_code,object.order_number,object.order_date,object.delivery_date,object.user_name]
+                order = [object.order_code,object.seller_code,object.food_code,object.order_number,object.order_date,object.delivery_date,object.user_name]
                 order_writer.writerow(order) 
             if type(object) is StoreOrder:
-                order = [object.order_code,object.food_code,object.order_number,object.order_date,object.delivery_date,object.store_code]
+                order = [object.order_code,object.seller_code,object.food_code,object.order_number,object.order_date,object.delivery_date,object.store_code]
                 order_writer.writerow(order) 
 
 
@@ -740,10 +779,4 @@ create_all_user()
 create_all_store()
 create_all_food()
 create_all_order()
-check_main_store()
 
-
-
-
-
-    
