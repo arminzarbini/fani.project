@@ -44,6 +44,9 @@ class Food:
             return True
         else :
             return False
+        
+    def extract_int_price(self):
+	    return "".join(filter(lambda x: x.isnumeric(), self.price))
 
 
 class User():
@@ -76,6 +79,9 @@ class User():
             return True
         else :
             return False
+        
+    def increase_purchase_ammount(self,new_purchase_ammount):
+        self.purchase_ammount = int(self.purchase_ammount) + int(new_purchase_ammount)
 
     
 class Store():
@@ -93,7 +99,7 @@ class Store():
             return True 
         else :
             return False
-
+         
 
 class Order():
     def __init__(self, order_code, food_code, order_number, order_date, delivery_date):
@@ -102,7 +108,6 @@ class Order():
         self.order_number = order_number
         self.order_date = order_date
         self.delivery_date = delivery_date
-
 
 class UserOrder(Order):
     def __init__(self, order_code, food_code, order_number, order_date, delivery_date, user_name):
@@ -164,8 +169,7 @@ def register_user():
                 break         
     new_user = User(user_name_input, name_family_input, national_code_input, phone_number_input, 0, 0, 0)
     all_user.append(new_user)
-    new_user_list = [new_user.user_name,new_user.name_family,new_user.national_code,new_user.phone_number,new_user.purchase_ammount,new_user.discount,new_user.debit]
-    add_user(new_user_list)
+    update_user()
 
 def edit_user():
     user_name_show = []
@@ -257,18 +261,12 @@ def edit_user():
     update_user()
         
 def create_all_user():
-    default_header = ["UserName", "NameFamily", "NationalCode", "PhoneNumber", "PurchaseAmmount", "Discount", "Debit"]
     with open("user.csv","r") as user_file:
         user_reader = csv.reader(user_file)
         header = next(user_reader)
         for row in user_reader :
             user = User(row[0],row[1],row[2],row[3],row[4],row[5],row[6])
             all_user.append(user)
-
-def add_user(new_user_list):
-    with open("user.csv","a",newline="\n") as user_file:
-        user_writer = csv.writer(user_file)
-        user_writer.writerow(new_user_list)
 
 def update_user():
     default_header = ["UserName", "NameFamily", "NationalCode", "PhoneNumber", "PurchaseAmmount", "Discount", "Debit"]  
@@ -298,8 +296,7 @@ def register_store():
                 break
     new_store = Store(store_code,store_name_input,0,0)
     all_store.append(new_store)
-    new_store_list = [new_store.store_code,new_store.store_name,new_store.not_delivered_orders,new_store.sell_price]
-    add_store(new_store_list)
+    update_store()
     
 def edit_store():
     store_name_show = []
@@ -344,7 +341,6 @@ def edit_store():
     update_store()
 
 def create_all_store():
-    default_header = ["StoreCode", "StoreName", "NotDeliveredOrders", "SellPrice"]
     with open("store.csv","r") as store_file:
         store_reader = csv.reader(store_file)
         header = next(store_reader)
@@ -352,10 +348,6 @@ def create_all_store():
             store = Store(row[0],row[1],row[2],row[3])
             all_store.append(store)
 
-def add_store(new_store_list):
-    with open("store.csv","a",newline="\n") as store_file:
-        store_wiriter = csv.writer(store_file)
-        store_wiriter.writerow(new_store_list)
 
 def update_store():
     default_store_header = ["StoreCode", "StoreName", "NotDeliveredOrders", "SellPrice"]  
@@ -447,8 +439,7 @@ def register_food():
             break
     new_food = Food(food_code,food_name_input,company_input,manufacture_date_str,expire_date_str,purchase_order_input,stock,price)
     all_food.append(new_food)
-    new_food_list = [new_food.food_code,new_food.food_name,new_food.company,new_food.manufacture_date,new_food.expire_date,new_food.purchase_order,new_food.stock,new_food.price]
-    add_food(new_food_list)
+    update_food()
 
 def edit_food():
     food_name_show = []
@@ -566,18 +557,12 @@ def edit_food():
     update_food()          
 
 def create_all_food():
-    default_header = ["FoodCode", "FoodName", "Company", "ManufactureDate","ExpireDate","PurchaseOrder","Stock","Price"]
     with open("food.csv","r") as food_file:
         food_reader = csv.reader(food_file)
         header = next(food_reader)
         for row in food_reader :
             food = Food(row[0],row[1],row[2],row[3],row[4],row[5],row[6],row[7])
             all_food.append(food)
-
-def add_food(new_food_list):
-    with open("food.csv","a",newline="\n") as food_file:
-        food_wiriter = csv.writer(food_file)
-        food_wiriter.writerow(new_food_list)
 
 def update_food():
     default_header = ["FoodCode", "FoodName", "Company", "ManufactureDate","ExpireDate","PurchaseOrder","Stock","Price"]  
@@ -655,14 +640,20 @@ def record_order_user():
         order_code,food_code_input,order_number,order_date_str,delivery_date_str = get_input_order()
     except:
         return False
-
-
-
     update_food()
+    for object in all_food:
+        if object.food_code == food_code_input :
+            int_price = object.extract_int_price()
+            break
+    int_price = int(int_price) * int(order_number)
+    for object in all_user:
+        if object.user_name == user_name_input:
+            object.increase_purchase_ammount(int_price)
+            break
     new_order_user = UserOrder(order_code,food_code_input,order_number,order_date_str,delivery_date_str,user_name_input)
     all_order.append(new_order_user)
-    new_order = [new_order_user.order_code,new_order_user.food_code,new_order_user.order_number,new_order_user.order_date,new_order_user.delivery_date,new_order_user.user_name]
-    add_order(new_order)
+    update_order()
+    update_user()
 
 
 def record_order_store():
@@ -682,8 +673,7 @@ def record_order_store():
     update_food()
     new_order_store = StoreOrder(order_code,food_code_input,order_number,order_date_str,delivery_date_str,store_code_input)
     all_order.append(new_order_store)
-    new_order = [new_order_store.order_code,new_order_store.food_code,new_order_store.order_number,new_order_store.order_date,new_order_store.delivery_date,new_order_store.store_code]
-    add_order(new_order)
+    update_order()
 
 
 def create_all_order():
@@ -708,6 +698,19 @@ def add_order(new_order):
         order_wiriter = csv.writer(order_file)
         order_wiriter.writerow(new_order)
 
+def update_order():
+    default_header = ["OrderCode", "FoodCode", "OrderNumber", "OrderDate","DeliveryDate","User/Store"]  
+    order = []              
+    with open("order.csv","w",newline="\n") as order_file:
+        order_writer = csv.writer(order_file)
+        order_writer.writerow(default_header)
+        for object in all_order :
+            if type(object) is UserOrder:
+                order = [object.order_code,object.food_code,object.order_number,object.order_date,object.delivery_date,object.user_name]
+                order_writer.writerow(order) 
+            if type(object) is StoreOrder:
+                order = [object.order_code,object.food_code,object.order_number,object.order_date,object.delivery_date,object.store_code]
+                order_writer.writerow(order) 
 
 
 all_user = []
@@ -718,12 +721,7 @@ create_all_user()
 create_all_store()
 create_all_food()
 create_all_order()
-
-  
-
-
-
-
+record_order_user()
 
 
 
