@@ -106,6 +106,12 @@ class Store():
             return True 
         else :
             return False
+        
+    def increase_not_deliverd_orders(self):
+        self.not_delivered_orders = int(self.not_delivered_orders) + 1
+
+    def increase_sell_price(self,new_sell):
+        self.sell_price = int(self.sell_price) + new_sell
          
 
 class Order():
@@ -306,7 +312,7 @@ def register_store():
     try : 
         store_code = int(all_store[-1].store_code) + 1
     except :
-        store_code = 1001
+        store_code = 1000
     while True :
         store_name_input = input("store name : ")
         #if store_name_input == "main":
@@ -698,14 +704,20 @@ def record_order_user():
         if object.user_name == user_name_input:
             object.increase_purchase_ammount(int_price)
             break
+    for object in all_store:
+        if object.store_code == seller_code:
+            object.increase_not_deliverd_orders()
+            object.increase_sell_price(int_price)
+            break
     for object in all_food:
         if object.food_code == food_code_input:
             object.decrease_stock(order_number)
             break
     new_order_user = UserOrder(order_code,seller_code,food_code_input,order_number,order_date_str,delivery_date_str,user_name_input)
     all_order.append(new_order_user)
-    update_food()
+    update_store()
     update_user()
+    update_food()
     update_order()
 
 
@@ -714,7 +726,7 @@ def record_order_store():
         store_code_input = input("store code : ")
         store_flag = False
         for object in all_store :
-            seller_code_check = object.get_store_code(seller_code)
+            seller_code_check = object.get_store_code(store_code_input)
             if seller_code_check == True :
                 store_flag = True
                 break
@@ -730,11 +742,22 @@ def record_order_store():
     except:
         return False
     for object in all_food:
+        if object.food_code == food_code_input :
+            int_price = object.extract_int_price()
+            break
+    int_price = int(int_price) * int(order_number)
+    for object in all_store:
+        if object.store_code == seller_code:
+            object.increase_not_deliverd_orders()
+            object.increase_sell_price(int_price)
+            break
+    for object in all_food:
         if object.food_code == food_code_input:
             object.decrease_stock(order_number)
             break
     new_order_store = StoreOrder(order_code,seller_code,food_code_input,order_number,order_date_str,delivery_date_str,store_code_input)
     all_order.append(new_order_store)
+    update_store()
     update_food()
     update_order()
 
@@ -779,4 +802,5 @@ create_all_user()
 create_all_store()
 create_all_food()
 create_all_order()
+record_order_user()
 
