@@ -2,6 +2,7 @@ import csv
 import random
 import string
 from datetime import date
+from datetime import time
 
 class Food:
     def __init__(
@@ -54,8 +55,6 @@ class Food:
 	    return "".join(filter(lambda x: x.isnumeric(), self.price))
     
 
-
-
 class User():
     def __init__(self, user_name, name_family, national_code, phone_number, purchase_ammount, discount, debit):
         self.user_name = user_name
@@ -88,7 +87,7 @@ class User():
             return False
         
     def increase_purchase_ammount(self,new_purchase_ammount):
-        self.purchase_ammount = int(self.purchase_ammount) + int(new_purchase_ammount)
+        self.purchase_ammount = int(self.purchase_ammount) + new_purchase_ammount
 
     
 class Store():
@@ -110,6 +109,9 @@ class Store():
     def increase_not_deliverd_orders(self):
         self.not_delivered_orders = int(self.not_delivered_orders) + 1
 
+    def decrease_not_deliverd_orders(self):
+        self.not_delivered_orders = int(self.not_delivered_orders) - 1
+
     def increase_sell_price(self,new_sell):
         self.sell_price = int(self.sell_price) + new_sell
          
@@ -123,16 +125,38 @@ class Order():
         self.order_date = order_date
         self.delivery_date = delivery_date
 
+    def get_order_code(self,order_code_delivered):
+        if self.order_code == order_code_delivered:
+            return True
+        else :
+            return False
+            
+    def yes_delivered(self,delivered):
+        self.delivery_date = delivered
+
+
 class UserOrder(Order):
     def __init__(self, order_code, seller_code, food_code, order_number, order_date, delivery_date,user_name):
         super().__init__(order_code, seller_code, food_code, order_number, order_date, delivery_date)
         self.user_name = user_name
 
+    def get_order_code(self, order_code_delivered):
+        return super().get_order_code(order_code_delivered)
+    
+    def yes_delivered(self, delivered):
+        return super().yes_delivered(delivered)
 
 class StoreOrder(Order):
     def __init__(self, order_code, seller_code, food_code, order_number, order_date, delivery_date,store_code):
         super().__init__(order_code, seller_code, food_code, order_number, order_date, delivery_date)
         self.store_code = store_code
+
+    def get_order_code(self, order_code_delivered):
+        return super().get_order_code(order_code_delivered)
+    
+    def yes_delivered(self, delivered):
+        return super().yes_delivered(delivered)
+
 
 
 def register_user():
@@ -409,11 +433,11 @@ def register_food():
             break  
     company_input = input("company : ")
     while True :
-        manufacture_date_input = input("enter manufacture date.example : 1990,9,30 : ").split(",")
+        manufacture_date_input = input("enter manufacture date.example : 1990-9-30 : ").split("-")
         try :
             manufacture_date = date(int(manufacture_date_input[0]),int(manufacture_date_input[1]),int(manufacture_date_input[2]))
         except IndexError :
-            print("enter correct fomrat.example : 1990,9,30")
+            print("enter correct fomrat.example : 1990-9-30")
         except TypeError:
             print("enter numbers")
         except ValueError:
@@ -426,11 +450,11 @@ def register_food():
                 manufacture_date_str = manufacture_date.strftime("%Y-%m-%d")
                 break
     while True:
-        expire_date_input = input("enter expire date.example : 2024,12,17 : ").split(",")
+        expire_date_input = input("enter expire date.example : 2024-12-17 : ").split("-")
         try :
             expire_date = date(int(expire_date_input[0]),int(expire_date_input[1]),int(expire_date_input[2]))
         except IndexError :
-            print("enter correct fomrat.example : 2024,12,17")
+            print("enter correct fomrat.example : 2024-12-17")
         except TypeError:
             print("enter numbers")
         except ValueError:
@@ -522,11 +546,11 @@ def edit_food():
                     object.edit_company(company_input)
                 elif edit_input == "3":
                     while True :
-                        manufacture_date_input = input("enter manufacture date.example : 1990,9,30 : ").split(",")
+                        manufacture_date_input = input("enter manufacture date.example : 1990-9-30 : ").split("-")
                         try :
                             manufacture_date = date(int(manufacture_date_input[0]),int(manufacture_date_input[1]),int(manufacture_date_input[2]))
                         except IndexError :
-                            print("enter correct fomrat.example : 1990,9,30")
+                            print("enter correct fomrat.example : 1990-9-30")
                         except TypeError:
                             print("enter numbers")
                         except ValueError:
@@ -541,11 +565,11 @@ def edit_food():
                                 break
                 elif edit_input == "4":
                     while True:
-                        expire_date_input = input("enter expire date.example : 2024,12,17 : ").split(",")
+                        expire_date_input = input("enter expire date.example : 2024-12-17 : ").split("-")
                         try :
                             expire_date = date(int(expire_date_input[0]),int(expire_date_input[1]),int(expire_date_input[2]))
                         except IndexError :
-                            print("enter correct fomrat.example : 2024,12,17")
+                            print("enter correct fomrat.example : 2024-12-17")
                         except TypeError:
                             print("enter numbers")
                         except ValueError:
@@ -659,11 +683,11 @@ def get_input_order():
     order_date = date.today()
     order_date_str = order_date.strftime("%Y-%m-%d")
     while True : 
-        delivery_date_input = input("enter delivery date.example : 2024,1,10 : ").split(",")
+        delivery_date_input = input("enter delivery date.example : 2024-1-10 : ").split("-")
         try :
             delivery_date = date(int(delivery_date_input[0]),int(delivery_date_input[1]),int(delivery_date_input[2]))
         except IndexError :
-            print("enter correct fomrat.example : 2024,1,10")
+            print("enter correct fomrat.example : 2024-1-10")
         except TypeError:
             print("enter numbers")
         except ValueError:
@@ -762,6 +786,68 @@ def record_order_store():
     update_order()
 
 
+def record_delivered_order():
+    while True : 
+        order_code_input = input("order code : ")
+        order_flag = False
+        for object in all_order :
+            order_code_check = object.get_order_code(order_code_input)
+            if order_code_check == True :
+                order_flag = True
+                break
+        if order_flag == False :
+            print("enter order code correctly")
+        elif order_flag == True :
+            for obeject in all_order:
+                if object.order_code == order_code_input :
+                    if object.delivery_date.startswith("delivered"):
+                        print("order is delivered")
+                        return False
+            break
+    while True : 
+        delivered_date_input = input("enter delivered date.example : 2023-1-23 : ").split("-")
+        try :
+            delivered_date = date(int(delivered_date_input[0]),int(delivered_date_input[1]),int(delivered_date_input[2]))
+        except IndexError :
+            print("enter correct fomrat.example : 2023-12-23")
+        except TypeError:
+            print("enter numbers")
+        except ValueError:
+            print("enter year between 1 to 9999-enter month between 1 to 12-enter day between 1 to 30")
+        else :
+            today = date.today()
+            if delivered_date > today :
+                print("delivered date must be today or before today")
+            else :
+                delivered_date_str = delivered_date.strftime("%Y-%m-%d")
+                break
+    while True :
+        delivered_time_input = input("enter delivered time.example : 23:25 : ").split(":")
+        try :
+            delivered_time = time(int(delivered_time_input[0]),int(delivered_time_input[1]))
+        except IndexError :
+            print("enter correct fomrat.example : 23:25")
+        except TypeError:
+            print("enter numbers")
+        except ValueError:
+            print("enter hour between 0 to 23-enter hour between 0 to 59")
+        else :
+            delivered_time_str = delivered_time.strftime("%H:%M")
+            break
+    delivered_datetime = f"delivered {delivered_date_str} {delivered_time_str}"
+    for object in all_order:
+        if object.order_code == order_code_input :
+            object.yes_delivered(delivered_datetime)
+            store = object.seller_code
+            break
+    for object in all_store:
+        if object.store_code == store :
+            object.decrease_not_deliverd_orders()
+            break
+    update_store()
+    update_order()
+
+    
 def create_all_order():
     with open("order.csv","r") as order_file:
         order_reader = csv.reader(order_file)
@@ -802,5 +888,6 @@ create_all_user()
 create_all_store()
 create_all_food()
 create_all_order()
-record_order_user()
+
+
 
