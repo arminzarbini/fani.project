@@ -89,7 +89,20 @@ class User():
     def increase_purchase_ammount(self,new_purchase_ammount):
         self.purchase_ammount = int(self.purchase_ammount) + new_purchase_ammount
 
-    
+    def add_discount(self,new_discount):
+        self.discount = new_discount
+
+    def add_debit(self,new_debit):
+        self.debit = int(self.debit) + new_debit
+
+    def use_debit(self,ammount):
+        if int(self.debit) == 0 and ammount >= int(self.debit) :
+            self.debit = int(self.debit) - ammount
+        else : 
+            print("debit payment is not possible")
+
+            
+
 class Store():
     def __init__(self, store_code, store_name, not_delivered_orders, sell_price):
         self.store_code = store_code
@@ -136,9 +149,10 @@ class Order():
 
 
 class UserOrder(Order):
-    def __init__(self, order_code, seller_code, food_code, order_number, order_date, delivery_date,user_name):
+    def __init__(self, order_code, seller_code, food_code, order_number, order_date, delivery_date,user_name,payment):
         super().__init__(order_code, seller_code, food_code, order_number, order_date, delivery_date)
         self.user_name = user_name
+        self.payment = payment
 
     def get_order_code(self, order_code_delivered):
         return super().get_order_code(order_code_delivered)
@@ -316,20 +330,6 @@ def update_user():
         for object in all_user :
             user = [object.user_name,object.name_family,object.national_code,object.phone_number,object.purchase_ammount,object.discount,object.debit]
             user_writer.writerow(user) 
-"""
-def main_store():
-    main = Store(1000,"main",0,0)
-    all_store.append(main)
-    update_store()
-
-def check_main_store():
-    for object in all_store :
-        if object.store_name == "main":
-            return False
-        break
-    else :
-        main_store()
-"""
 
 
 def register_store():
@@ -339,8 +339,6 @@ def register_store():
         store_code = 1000
     while True :
         store_name_input = input("store name : ")
-        #if store_name_input == "main":
-            #print("main store already exist")
         if store_name_input.isalnum() == False :
             print("enter storename only with alphabet letter (a-z) and numbers (0-9)")
         else :
@@ -358,7 +356,6 @@ def edit_store():
     store_name_show = []
     with open("store.csv","r") as store_file:
         store_reader = csv.DictReader(store_file)
-        # main_reader = next(store_reader)
         for row in store_reader :
             store_name_show.append(row["StoreName"])
     for item in store_name_show :
@@ -383,8 +380,6 @@ def edit_store():
                 if edit_input == "1":
                     while True :
                         store_name_input = input("store name : ")
-                        #if store_name_input == "main":
-                            #print("main store already exist")
                         if store_name_input.isalnum() == False :
                              print("enter storename only with alphabet letter (a-z) and numbers (0-9)")
                         else :
@@ -711,33 +706,47 @@ def record_order_user():
                 user_flag = True
                 break
         if user_flag == False :
-            print("store does not exist")
+            print("username does not exist")
         elif user_flag == True :
             break
+        
 
     try:
         order_code,seller_code,food_code_input,order_number,order_date_str,delivery_date_str = get_input_order()
     except:
         return False
+
     for object in all_food:
         if object.food_code == food_code_input :
-            int_price = object.extract_int_price()
+            price = object.extract_int_price()
             break
-    int_price = int(int_price) * int(order_number)
+    total_ammount = int(price) * int(order_number)
+    discount_order = discount_product(total_ammount)
+    debit_order = debit_product(total_ammount)
     for object in all_user:
         if object.user_name == user_name_input:
-            object.increase_purchase_ammount(int_price)
-            break
+            object.increase_purchase_ammount(total_ammount)
+            object.add_discount(discount_order)
+            object.add_debit(debit_order)
+            while True :
+                payment_method = input("payment method : cash or debit? ")
+                if payment_method == "cash" :
+                    break
+                elif payment_method == "debit" :
+                    object.use_debit(total_ammount)
+                    break
+                else : 
+                    print("write the correct command")
     for object in all_store:
         if object.store_code == seller_code:
             object.increase_not_deliverd_orders()
-            object.increase_sell_price(int_price)
+            object.increase_sell_price(total_ammount)
             break
     for object in all_food:
         if object.food_code == food_code_input:
             object.decrease_stock(order_number)
             break
-    new_order_user = UserOrder(order_code,seller_code,food_code_input,order_number,order_date_str,delivery_date_str,user_name_input)
+    new_order_user = UserOrder(order_code,seller_code,food_code_input,order_number,order_date_str,delivery_date_str,user_name_input,payment_method)
     all_order.append(new_order_user)
     update_store()
     update_user()
@@ -767,13 +776,13 @@ def record_order_store():
         return False
     for object in all_food:
         if object.food_code == food_code_input :
-            int_price = object.extract_int_price()
+            price = object.extract_int_price()
             break
-    int_price = int(int_price) * int(order_number)
+    total_ammount = int(price) * int(order_number)
     for object in all_store:
         if object.store_code == seller_code:
             object.increase_not_deliverd_orders()
-            object.increase_sell_price(int_price)
+            object.increase_sell_price(total_ammount)
             break
     for object in all_food:
         if object.food_code == food_code_input:
@@ -855,7 +864,7 @@ def create_all_order():
         for row in order_reader :
             for object in all_user:
                 if object.user_name == row[6]:
-                    order = UserOrder(row[0],row[1],row[2],row[3],row[4],row[5],row[6])
+                    order = UserOrder(row[0],row[1],row[2],row[3],row[4],row[5],row[6],row[7])
                     all_order.append(order)
                     break
             for object in all_store:
@@ -866,18 +875,58 @@ def create_all_order():
 
 
 def update_order():
-    default_header = ["OrderCode","SellerCode", "FoodCode", "OrderNumber", "OrderDate","DeliveryDate","User/Store"]  
+    default_header = ["OrderCode","SellerCode", "FoodCode", "OrderNumber", "OrderDate","DeliveryDate","User/Store","PaymentMethod"]  
     order = []              
     with open("order.csv","w",newline="\n") as order_file:
         order_writer = csv.writer(order_file)
         order_writer.writerow(default_header)
         for object in all_order :
             if type(object) is UserOrder:
-                order = [object.order_code,object.seller_code,object.food_code,object.order_number,object.order_date,object.delivery_date,object.user_name]
+                order = [object.order_code,object.seller_code,object.food_code,object.order_number,object.order_date,object.delivery_date,object.user_name,object.payment]
                 order_writer.writerow(order) 
             if type(object) is StoreOrder:
                 order = [object.order_code,object.seller_code,object.food_code,object.order_number,object.order_date,object.delivery_date,object.store_code]
                 order_writer.writerow(order) 
+
+
+
+def discount_product(ammount):
+    if ammount < 1000000 :
+        return 0
+    elif 1000000 <= ammount <= 5000000:
+        discount5 = {}
+        discount5.setdefault((''.join(random.choices(string.digits, k=5))),5)
+        for key,value in discount5.items():
+            print (f"{value}% off for next purchase with code {key}")
+        return discount5
+    elif 5000000 < ammount <= 10000000 :
+        discount7 = {}
+        discount7.setdefault((''.join(random.choices(string.digits, k=5))),7)
+        for key,value in discount7.items():
+            print (f"{value}% off for next purchase with code {key}")
+        return discount7
+    elif 10000000 < ammount <= 20000000:
+        discount10 = {}
+        discount10.setdefault((''.join(random.choices(string.digits, k=5))),10)
+        for key,value in discount10.items():
+            print (f"{value}% off for next purchase with code {key}")  
+        return discount10
+    elif ammount > 20000000:
+        discountmax = {}
+        discountmax.setdefault((''.join(random.choices(string.digits, k=5))),200000)
+        for key,value in discountmax.items():
+            print (f"{value} toman off for next purchase with code {key}")
+        return discountmax
+    
+
+def debit_product(ammount):
+    debit_number = ammount // 5000000 
+    debit = debit_number * 500000
+    return debit
+
+        
+
+    
 
 
 all_user = []
@@ -888,6 +937,8 @@ create_all_user()
 create_all_store()
 create_all_food()
 create_all_order()
+record_order_user()
+
 
 
 
