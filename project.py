@@ -5,10 +5,7 @@ from datetime import date
 from datetime import time
 
 class Food:
-    def __init__(
-            self, food_code, food_name, company, manufacture_date, 
-            expire_date, purchase_order, stock, price
-            ):
+    def __init__(self, food_code, food_name, company, manufacture_date, expire_date, purchase_order, stock, price):
         self.food_code = food_code
         self.food_name = food_name
         self.company = company
@@ -17,7 +14,7 @@ class Food:
         self.purchase_order = purchase_order
         self.stock = stock
         self.price = price
-    
+
     def edit_food_name(self,new_food_name):
         self.food_name = new_food_name
 
@@ -39,24 +36,21 @@ class Food:
         else :
             return False
         
-
     def order_stock_check(self,food_order):
         if int(self.stock) >= food_order :
             return True
         else :
             return False
-        
-        
+
     def decrease_stock(self,decrease):
         self.stock = int(self.stock) - decrease
 
-        
     def extract_int_price(self):
 	    return "".join(filter(lambda x: x.isnumeric(), self.price))
     
 
 class User():
-    def __init__(self, user_name, name_family, national_code, phone_number, purchase_ammount, discount, debit):
+    def __init__(self, user_name, name_family, national_code, phone_number, purchase_ammount, discount, debit, credit):
         self.user_name = user_name
         self.name_family = name_family
         self.national_code = national_code
@@ -64,18 +58,16 @@ class User():
         self.purchase_ammount = purchase_ammount
         self.discount = discount
         self.debit = debit
+        self.credit = credit
 
     def edit_user_name(self,new_user_name):
         self.user_name = new_user_name
 
-
     def edit_user_name_family(self,new_name_family):
         self.name_family = new_name_family
 
-
     def edit_national_code(self,new_national_code):
         self.national_code = new_national_code
-
 
     def edit_phone_number(self,new_phone_numnber):
         self.phone_number = new_phone_numnber
@@ -92,16 +84,30 @@ class User():
     def add_discount(self,new_discount):
         self.discount = new_discount
 
-    def add_debit(self,new_debit):
-        self.debit = int(self.debit) + new_debit
+    def add_credit(self,new_credit):
+        self.credit = int(self.credit) + new_credit
 
-    def use_debit(self,ammount):
-        if int(self.debit) == 0 and ammount >= int(self.debit) :
-            self.debit = int(self.debit) - ammount
-        else : 
-            print("debit payment is not possible")
+    def add_debit(self,ammount):
+        self.debit = ammount
 
-            
+    def check_debit(self):
+        if int(self.debit) == 0 :
+            return True
+        else :
+            return False
+        
+    def check_credit(self,ammount):
+        if int(self.credit) >= ammount :
+            return True
+        else :
+            return False
+
+    def use_credit(self,ammount):
+        self.credit = int(self.credit) - ammount
+
+    def zero_debt(self):
+        self.debit = 0
+
 
 class Store():
     def __init__(self, store_code, store_name, not_delivered_orders, sell_price):
@@ -127,7 +133,7 @@ class Store():
 
     def increase_sell_price(self,new_sell):
         self.sell_price = int(self.sell_price) + new_sell
-         
+
 
 class Order():
     def __init__(self, order_code, seller_code, food_code, order_number, order_date, delivery_date):
@@ -170,9 +176,8 @@ class StoreOrder(Order):
     
     def yes_delivered(self, delivered):
         return super().yes_delivered(delivered)
-
-
-
+    
+    
 def register_user():
     while True :
         user_name_input = input("username : ")
@@ -220,9 +225,13 @@ def register_user():
                     break
             else :
                 break         
-    new_user = User(user_name_input, name_family_input, national_code_input, phone_number_input, 0, 0, 0)
+    new_user = User(user_name_input, name_family_input, national_code_input, phone_number_input, 0, 0, 0, 0)
     all_user.append(new_user)
     update_user()
+    print("*" * 20)
+    print("new user added")
+    print("*" * 20)
+
 
 def edit_user():
     user_name_show = []
@@ -312,23 +321,28 @@ def edit_user():
                 else : 
                     print("\nwrite the correct command!\n")
     update_user()
-        
+    print("*" * 20)
+    print("user edited")
+    print("*" * 20)
+
+
 def create_all_user():
     with open("user.csv","r") as user_file:
         user_reader = csv.reader(user_file)
         header = next(user_reader)
         for row in user_reader :
-            user = User(row[0],row[1],row[2],row[3],row[4],row[5],row[6])
+            user = User(row[0],row[1],row[2],row[3],row[4],row[5],row[6],row[7])
             all_user.append(user)
 
+
 def update_user():
-    default_header = ["UserName", "NameFamily", "NationalCode", "PhoneNumber", "PurchaseAmmount", "Discount", "Debit"]  
+    default_header = ["UserName", "NameFamily", "NationalCode", "PhoneNumber", "PurchaseAmmount", "Discount", "Debit", "Credit"]  
     user = []              
     with open("user.csv","w",newline="\n") as user_file:
         user_writer = csv.writer(user_file)
         user_writer.writerow(default_header)
         for object in all_user :
-            user = [object.user_name,object.name_family,object.national_code,object.phone_number,object.purchase_ammount,object.discount,object.debit]
+            user = [object.user_name,object.name_family,object.national_code,object.phone_number,object.purchase_ammount,object.discount,object.debit,object.credit]
             user_writer.writerow(user) 
 
 
@@ -351,7 +365,11 @@ def register_store():
     new_store = Store(store_code,store_name_input,0,0)
     all_store.append(new_store)
     update_store()
+    print("*" * 20)
+    print("new store added")
+    print("*" * 20)
     
+
 def edit_store():
     store_name_show = []
     with open("store.csv","r") as store_file:
@@ -393,6 +411,10 @@ def edit_store():
                 else :
                     print("\nwrite the correct command!\n")
     update_store()
+    print("*" * 20)
+    print("store edited")
+    print("*" * 20)
+
 
 def create_all_store():
     with open("store.csv","r") as store_file:
@@ -412,6 +434,7 @@ def update_store():
         for object in all_store :
             store = [object.store_code,object.store_name,object.not_delivered_orders,object.sell_price]
             store_writer.writerow(store)
+
 
 def register_food():
     try : 
@@ -482,7 +505,7 @@ def register_food():
         price_flag = True
         price_input = input("price(example : 100.000.000) : ").split(".")
         for item in price_input :
-            if item.isnumeric() == False or len(item) != 3 :
+            if item.isnumeric() == False or len(item) > 3 :
                 price_flag = False
                 print("write numbers")
                 break
@@ -494,6 +517,10 @@ def register_food():
     new_food = Food(food_code,food_name_input,company_input,manufacture_date_str,expire_date_str,purchase_order_input,stock,price)
     all_food.append(new_food)
     update_food()
+    print("*" * 20)
+    print("new food added")
+    print("*" * 20)
+
 
 def edit_food():
     food_name_show = []
@@ -592,7 +619,7 @@ def edit_food():
                         price_flag = True
                         price_input = input("price(example : 100.000.000) : ").split(".")
                         for item in price_input :
-                            if len(item) != 3 :
+                            if len(item) > 3 :
                                 print("enter correct format")
                             elif item.isnumeric() == False :
                                 price_flag = False
@@ -608,7 +635,11 @@ def edit_food():
                     break
                 else :
                     print("wire the correct command")
-    update_food()          
+    update_food()
+    print("*" * 20)
+    print("food edited")
+    print("*" * 20)          
+
 
 def create_all_food():
     with open("food.csv","r") as food_file:
@@ -617,6 +648,7 @@ def create_all_food():
         for row in food_reader :
             food = Food(row[0],row[1],row[2],row[3],row[4],row[5],row[6],row[7])
             all_food.append(food)
+
 
 def update_food():
     default_header = ["FoodCode", "FoodName", "Company", "ManufactureDate","ExpireDate","PurchaseOrder","Stock","Price"]  
@@ -696,6 +728,7 @@ def get_input_order():
     
     return order_code,seller_code,food_code_input,order_number,order_date_str,delivery_date_str
 
+
 def record_order_user():
     while True :
         user_name_input = input("user name : ")
@@ -708,9 +741,7 @@ def record_order_user():
         if user_flag == False :
             print("username does not exist")
         elif user_flag == True :
-            break
-        
-
+            break        
     try:
         order_code,seller_code,food_code_input,order_number,order_date_str,delivery_date_str = get_input_order()
     except:
@@ -722,19 +753,27 @@ def record_order_user():
             break
     total_ammount = int(price) * int(order_number)
     discount_order = discount_product(total_ammount)
-    debit_order = debit_product(total_ammount)
+    credit_order = credit_product(total_ammount)
     for object in all_user:
         if object.user_name == user_name_input:
             object.increase_purchase_ammount(total_ammount)
             object.add_discount(discount_order)
-            object.add_debit(debit_order)
+            object.add_credit(credit_order)
             while True :
-                payment_method = input("payment method : cash or debit? ")
+                payment_method = input("payment method : cash or credit? ")
                 if payment_method == "cash" :
                     break
-                elif payment_method == "debit" :
-                    object.use_debit(total_ammount)
-                    break
+                elif payment_method == "credit" :
+                    order_debit_check = object.check_debit()
+                    order_credit_check = object.check_credit(total_ammount)
+                    if order_debit_check == True and order_credit_check == True :
+                        object.use_credit(total_ammount)
+                        object.add_debit(total_ammount)
+                        break
+                    else :
+                        payment_method = "cash"
+                        print("credit payment is not possible")
+                        break
                 else : 
                     print("write the correct command")
     for object in all_store:
@@ -752,6 +791,9 @@ def record_order_user():
     update_user()
     update_food()
     update_order()
+    print("*" * 20)
+    print("new user order added")
+    print("*" * 20)
 
 
 def record_order_store():
@@ -793,6 +835,9 @@ def record_order_store():
     update_store()
     update_food()
     update_order()
+    print("*" * 20)
+    print("new store order added")
+    print("*" * 20)
 
 
 def record_delivered_order():
@@ -855,6 +900,9 @@ def record_delivered_order():
             break
     update_store()
     update_order()
+    print("*" * 20)
+    print("order delivered")
+    print("*" * 20)
 
     
 def create_all_order():
@@ -889,7 +937,6 @@ def update_order():
                 order_writer.writerow(order) 
 
 
-
 def discount_product(ammount):
     if ammount < 1000000 :
         return 0
@@ -919,15 +966,74 @@ def discount_product(ammount):
         return discountmax
     
 
-def debit_product(ammount):
-    debit_number = ammount // 5000000 
-    debit = debit_number * 500000
-    return debit
+def credit_product(ammount):
+    credit_number = ammount // 5000000 
+    credit = credit_number * 500000
+    return credit
 
-        
 
+def zero_debt_user():
+    user_name_input = input("enter user name to zero the debt : ")
+    for object in all_user :
+        if object.user_name == user_name_input :
+            object.zero_debt()
+            update_user()
+        else :
+            print("username does not exist")
+
+
+def selling_food():
+    food_code_input = input("food code : ")
+    sell_food = 0
+    for object in all_order :
+        if object.food_code == food_code_input:
+            sell_food = sell_food + int(object.order_number)
+    print (f"selling {sell_food} number")
+
+
+def main():
+    while True :
+        print("""1.add user
+2.edit user
+3.add store
+4.edit store
+5.add food
+6.edit food
+7.add order for user
+8.add order for store
+9.add delivered order
+10.add zero debt for user
+11.selling food number          
+12.exit
+""")
+        step = input()
+        if step == "1":
+            register_user()
+        elif step == "2":
+            edit_user()
+        elif step == "3":
+            register_store()
+        elif step == "4":
+            edit_store()
+        elif step == "5":
+            register_food()
+        elif step == "6":
+            edit_food()
+        elif step == "7":
+            record_order_user()
+        elif step == "8":
+            record_order_store()
+        elif step == "9":
+            record_delivered_order()
+        elif step == "10":
+            zero_debt_user()
+        elif step == "11":
+            selling_food()
+        elif step == "12":
+            break
+        else :
+            "write the correct command"
     
-
 
 all_user = []
 all_store = []
@@ -937,7 +1043,13 @@ create_all_user()
 create_all_store()
 create_all_food()
 create_all_order()
-record_order_user()
+
+main()
+
+
+
+
+
 
 
 
